@@ -1,0 +1,9 @@
+telethon==1.37.0
+python-dotenv==1.1.0
+openai==1.82.0  # used as OpenRouter client
+faster-whisper==1.1.0  # local transcription
+requests
+qdrant-client==1.12.1
+sentence-transformers==3.3.1
+langgraph>=0.2.50
+aiogram>=3.13.0

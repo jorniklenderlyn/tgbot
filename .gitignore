@@ -1,0 +1,12 @@
+.env
+session.session
+*.json
+!whitelist.json
+chat_prompts/*.md
+!chat_prompts/_example.md
+__pycache__/
+.chat_contexts/
+qdrant_storage/
+backups/
+images_*/
+.venv/
