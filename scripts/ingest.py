@@ -31,7 +31,7 @@ from _rag import (
     get_qdrant,
     ensure_collection,
 )
-from src.prompt_loader import load_prompt
+from src.util.prompt_loader import load_prompt
 
 OPENROUTER_API_KEY = os.environ["OPENROUTER_API_KEY"]
 OPENROUTER_LLM_MODEL = os.environ.get("OPENROUTER_LLM_MODEL", "google/gemini-2.5-flash")

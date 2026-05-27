@@ -12,9 +12,9 @@ from pathlib import Path
 from openai import OpenAI
 
 from src.config import ASSISTANT_LLM_MODEL, WORKING_MEMORY_DIR, WORKING_MEMORY_MAX_TOKENS
-from src.prompt_loader import load_prompt
+from src.util import load_prompt
 
-_PROJECT_ROOT = Path(__file__).resolve().parent.parent
+_PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 _MEMORY_DIR = _PROJECT_ROOT / WORKING_MEMORY_DIR
 
 _chat_locks: dict[int, asyncio.Lock] = defaultdict(asyncio.Lock)

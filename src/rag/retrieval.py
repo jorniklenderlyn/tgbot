@@ -7,8 +7,12 @@ from qdrant_client.http import models as qm
 from src.config import QDRANT_COLLECTION, STYLE_COLLECTION
 
 
-def retrieve_style_examples(qdrant, vector, chat_id: str, k: int = 5):
-    flt = qm.Filter(must=[qm.FieldCondition(key="chat_id", match=qm.MatchValue(value=chat_id))])
+def retrieve_style_examples(qdrant, vector, chat_id: str | None, k: int = 5):
+    """Retrieve style few-shot pairs. chat_id=None searches across all chats
+    (safe with the fact-redacted bank); a chat_id restricts to that chat."""
+    flt = None
+    if chat_id is not None:
+        flt = qm.Filter(must=[qm.FieldCondition(key="chat_id", match=qm.MatchValue(value=chat_id))])
     try:
         return qdrant.search(
             collection_name=STYLE_COLLECTION,

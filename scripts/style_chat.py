@@ -39,7 +39,8 @@ if ROOT not in sys.path:
     sys.path.insert(0, ROOT)
 
 from _rag import embed_one, get_embedder, get_qdrant  # noqa: E402
-from src.prompt_loader import load_prompt  # noqa: E402
+from src.util.prompt_loader import load_prompt  # noqa: E402
+from src.util.style import clean_text as _clean, render_persona  # noqa: E402,F401
 
 OPENROUTER_API_KEY = os.environ.get("OPENROUTER_API_KEY", "")
 STYLE_COLLECTION = os.environ.get("STYLE_COLLECTION", "tg_style")
@@ -47,70 +48,6 @@ STYLE_LLM_MODEL = os.environ.get("STYLE_LLM_MODEL", "deepseek/deepseek-v4-flash"
 STYLE_LLM_PROVIDER = os.environ.get("STYLE_LLM_PROVIDER", "DeepInfra")
 
 MAX_HISTORY_TURNS = 12
-
-
-def render_persona(profile: dict) -> str:
-    """Flatten the style-profile JSON into a compact persona description."""
-    lines = []
-    s = profile.get("surface_style") or {}
-    if s:
-        lines.append("How they write (measured):")
-        lines.append(f"- typical message: ~{s.get('avg_message_length_words')} words, "
-                     f"density={s.get('message_density')}, fragmentation={s.get('fragmentation')} "
-                     f"(often {s.get('messages_per_turn')} messages per turn)")
-        lines.append(f"- capitalization: {s.get('capitalization')} "
-                     f"(lowercase-start rate {s.get('lowercase_start_rate')})")
-        lines.append(f"- terminal punctuation often omitted ({s.get('no_terminal_punctuation_rate')} of msgs)")
-        if s.get("common_emojis"):
-            lines.append(f"- emojis (rate {s.get('emoji_rate')}/msg): {' '.join(s['common_emojis'][:8])}")
-        smile = s.get("happy_vs_sad_smileys") or {}
-        if smile:
-            lines.append(f"- bracket smileys: ) happy x{smile.get('happy')}, ( sad x{smile.get('sad')} "
-                         f"(rate {s.get('bracket_smiley_rate')})")
-        if s.get("slang"):
-            lines.append(f"- slang/abbreviations: {', '.join(s['slang'][:15])}")
-        if s.get("swear_roots"):
-            lines.append(f"- swears (rate {s.get('swear_message_rate')}): {', '.join(s['swear_roots'])}")
-        lines.append(f"- questions in {s.get('question_rate')} of msgs; "
-                     f"ellipsis {'yes' if s.get('uses_ellipsis') else 'rare'}")
-
-    lc = profile.get("linguistic_constructions") or {}
-    if lc:
-        lines.append("\nLinguistic habits:")
-        if lc.get("frequent_openers"):
-            lines.append(f"- openers: {', '.join(lc['frequent_openers'][:12])}")
-        if lc.get("favorite_connectors"):
-            lines.append(f"- connectors: {', '.join(lc['favorite_connectors'][:12])}")
-        if lc.get("characteristic_phrases"):
-            lines.append(f"- signature phrases: {', '.join(lc['characteristic_phrases'][:15])}")
-        for key, label in [("reasoning_pattern", "reasoning"), ("question_style", "questions"),
-                           ("explanation_style", "explaining"), ("correction_style", "corrections"),
-                           ("rhythm", "rhythm")]:
-            if lc.get(key):
-                lines.append(f"- {label}: {lc[key]}")
-
-    cb = profile.get("conversational_behavior") or {}
-    if cb.get("summary"):
-        lines.append(f"\nConversational behaviour: {cb['summary']}")
-    for key, label in [("verbosity", "verbosity"), ("topic_switching", "topic-switching"),
-                       ("follow_up_questions", "follow-ups")]:
-        if cb.get(key):
-            lines.append(f"- {label}: {cb[key]}")
-
-    cs = profile.get("cognitive_style") or {}
-    if cs.get("traits"):
-        lines.append(f"\nCognitive traits: {', '.join(cs['traits'])}")
-    if cs.get("summary"):
-        lines.append(f"Cognitive style: {cs['summary']}")
-
-    return "\n".join(lines)
-
-
-_MARKER_RE = __import__("re").compile(r"\[(?:изображение|видео|голос[^\]]*|медиа)[^\]]*\]")
-
-
-def _clean(text: str) -> str:
-    return _MARKER_RE.sub("", text or "").strip()
 
 
 def retrieve_shots(qdrant, embedder, incoming: str, k: int) -> list[dict]:

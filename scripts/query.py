@@ -23,7 +23,7 @@ from sentence_transformers import SentenceTransformer
 load_dotenv()
 
 from _rag import embed_one, get_embedder, get_qdrant
-from src.prompt_loader import load_prompt
+from src.util.prompt_loader import load_prompt
 
 OPENROUTER_API_KEY = os.environ.get("OPENROUTER_API_KEY", "")
 OPENROUTER_LLM_MODEL = os.environ.get("OPENROUTER_LLM_MODEL", "google/gemini-2.5-flash")

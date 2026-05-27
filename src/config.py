@@ -58,6 +58,17 @@ QDRANT_URL = os.environ.get("QDRANT_URL", "http://localhost:6333")
 QDRANT_COLLECTION = os.environ.get("QDRANT_COLLECTION", "tg_chat")
 STYLE_COLLECTION = os.environ.get("STYLE_COLLECTION", "tg_style")
 
+# Style imitation for the live assistant.
+#   STYLE_ENABLED=0 falls back to the plain (no persona / no few-shot) generator.
+#   STYLE_PROFILE_FILE: path to a *.style.json (extract_style_profile.py output);
+#     empty => auto-pick the latest *.style.json in the project root.
+STYLE_ENABLED = os.environ.get("STYLE_ENABLED", "1") not in ("0", "false", "False", "")
+STYLE_PROFILE_FILE = os.environ.get("STYLE_PROFILE_FILE", "")
+STYLE_FEWSHOT_K = int(os.environ.get("STYLE_FEWSHOT_K", "6"))
+# Retrieve style examples across all chats (the fact-redacted bank is safe to
+# share). 0 restricts few-shot to the current chat only.
+STYLE_CROSS_CHAT = os.environ.get("STYLE_CROSS_CHAT", "1") not in ("0", "false", "False", "")
+
 WHITELIST_FILE = os.environ.get("WHITELIST_FILE", "whitelist.json")
 CHAT_PROMPTS_DIR = os.environ.get("CHAT_PROMPTS_DIR", "chat_prompts")
 HISTORY_DEPTH = int(os.environ.get("ASSISTANT_HISTORY_DEPTH", "10"))

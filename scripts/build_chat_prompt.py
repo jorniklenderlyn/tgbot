@@ -23,7 +23,7 @@ from openai import OpenAI
 load_dotenv()
 
 from _rag import render_message  # noqa: E402
-from src.prompt_loader import load_prompt  # noqa: E402
+from src.util.prompt_loader import load_prompt  # noqa: E402
 
 TELEGRAM_USER_ID = int(os.environ["TELEGRAM_USER_ID"])
 OPENROUTER_API_KEY = os.environ["OPENROUTER_API_KEY"]

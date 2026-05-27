@@ -3,7 +3,7 @@
 from functools import lru_cache
 from pathlib import Path
 
-_PROMPTS_DIR = Path(__file__).resolve().parent.parent / "prompts"
+_PROMPTS_DIR = Path(__file__).resolve().parent.parent.parent / "prompts"
 
 
 @lru_cache(maxsize=None)

@@ -41,10 +41,9 @@ from src.config import (
     telegram_api_id,
     telegram_phone,
 )
-from src.drafts import DraftStore
-from src.transcription import transcribe_video_message, transcribe_voice_message
-from src.whitelist import resolve_mode
-from src.working_memory import (
+from src.memory import DraftStore, resolve_mode
+from src.messaging.transcription import transcribe_video_message, transcribe_voice_message
+from src.memory import (
     build_initial_memory,
     load_memory,
     save_memory,

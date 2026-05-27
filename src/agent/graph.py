@@ -46,13 +46,19 @@ RISK_KEYWORDS = re.compile(
 
 
 class AgentDeps:
-    def __init__(self, llm: OpenAI, chat_prompts: dict[str, str]):
+    def __init__(self, llm: OpenAI, chat_prompts: dict[str, str],
+                 qdrant=None, embedder=None, persona: str | None = None,
+                 fewshot_k: int = 6):
         self.llm = llm
         self.chat_prompts = chat_prompts
+        self.qdrant = qdrant
+        self.embedder = embedder
+        self.persona = persona
+        self.fewshot_k = fewshot_k
 
 
 def _load_chat_prompt_node(deps: AgentDeps):
-    from src.chat_prompts import resolve_chat_prompt
+    from src.memory import resolve_chat_prompt
 
     def _fn(state: AgentState) -> AgentState:
         md = resolve_chat_prompt(
@@ -65,7 +71,7 @@ def _load_chat_prompt_node(deps: AgentDeps):
 
 
 def _load_working_memory_node(deps: AgentDeps):
-    from src.working_memory import load_memory
+    from src.memory import load_memory
 
     def _fn(state: AgentState) -> AgentState:
         memory = load_memory(state["chat_id"])
@@ -210,9 +216,37 @@ def _parse_llm_json(raw: str) -> dict:
     return obj
 
 
+def _retrieve_style_examples(deps: AgentDeps, state: AgentState):
+    """Embed the incoming message and pull this chat's (incoming->reply) pairs."""
+    if not (deps.qdrant and deps.embedder):
+        return []
+    try:
+        from src.config import STYLE_CROSS_CHAT
+        from src.rag import embed_one, retrieve_style_examples
+        vec = embed_one(deps.embedder, state["incoming_text"], is_query=True)
+        chat_id = None if STYLE_CROSS_CHAT else (state.get("chat_id_str") or str(state["chat_id"]))
+        return retrieve_style_examples(deps.qdrant, vec, chat_id, k=deps.fewshot_k)
+    except Exception as e:
+        print(f"[style] retrieval failed: {e}", file=sys.stderr)
+        return []
+
+
 def _generate_node(deps: AgentDeps):
+    from src.util import render_fewshot
+
     def _fn(state: AgentState) -> AgentState:
         messages = [{"role": "system", "content": SYSTEM_PROMPT}]
+        # Global persona (how the user writes) — stable across chats.
+        if deps.persona:
+            messages.append({
+                "role": "system",
+                "content": "ТВОЙ СТИЛЬ ПИСЬМА (профиль):\n\n" + deps.persona,
+            })
+        # Per-chat few-shot examples of how the user actually replied here.
+        examples = _retrieve_style_examples(deps, state)
+        fewshot = render_fewshot(examples)
+        if fewshot:
+            messages.append({"role": "system", "content": fewshot})
         if state.get("chat_prompt"):
             messages.append({
                 "role": "system",
@@ -257,11 +291,16 @@ def build_agent(
     embedder=None,
     chat_prompts: dict[str, str] | None = None,
     llm: OpenAI | None = None,
+    persona: str | None = None,
+    fewshot_k: int = 6,
 ):
-    """qdrant / embedder are accepted for compatibility but ignored in simple mode."""
+    """Style imitation is active when qdrant+embedder (few-shot) and/or persona
+    are supplied; otherwise the agent runs in plain mode."""
     if llm is None:
         llm = OpenAI(api_key=OPENROUTER_API_KEY, base_url="https://openrouter.ai/api/v1")
-    deps = AgentDeps(llm=llm, chat_prompts=chat_prompts or {})
+    deps = AgentDeps(llm=llm, chat_prompts=chat_prompts or {},
+                     qdrant=qdrant, embedder=embedder, persona=persona,
+                     fewshot_k=fewshot_k)
 
     g = StateGraph(AgentState)
     g.add_node("load_chat_prompt", _load_chat_prompt_node(deps))

@@ -19,7 +19,7 @@ from aiogram.types import (
 )
 
 from src.config import bot_owner_id, bot_token
-from src.drafts import Draft, DraftStore
+from src.memory import Draft, DraftStore
 
 
 SendReplyCb = Callable[[int, str], Awaitable[bool]]

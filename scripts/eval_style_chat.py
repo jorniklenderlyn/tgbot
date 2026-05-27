@@ -38,7 +38,7 @@ if ROOT not in sys.path:
 
 import style_chat as sc  # noqa: E402  (sibling script; reuse its helpers)
 from _rag import get_embedder, get_qdrant  # noqa: E402
-from src.prompt_loader import load_prompt  # noqa: E402
+from src.util.prompt_loader import load_prompt  # noqa: E402
 
 OPENROUTER_API_KEY = os.environ.get("OPENROUTER_API_KEY", "")
 
